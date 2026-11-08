@@ -35,6 +35,7 @@ all green-beards. This genetic trait is inherited from a single parent and has t
 probability to be flipped.
 '''
 import random
+import numpy as np
 
 GA_PARAMS = {
   # Scavenger parameters
@@ -46,6 +47,14 @@ GA_PARAMS = {
   "gb_strt": 0.2,     # Fraction of starting population that has green-beard
   "gb_flip": 0.01,    # Probability of flipping beard gene in both directions
 }
+
+def create_fixed_effort(n, effort):
+    """Returns array of n effort values."""
+    return np.full(n, effort)
+ 
+def create_random_efforts(n):
+    """Returns array of n uniform random effort values."""
+    return np.random.uniform(0, 1, size=n)
 
 class RandomAgent:
   def __str__(self):
