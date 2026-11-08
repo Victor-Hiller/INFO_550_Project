@@ -3,28 +3,49 @@ Contains genetic algorithm code for the scavenger agent.
 
 Population:
 Scavenger agents make up a population that collects waste from prey to survive
-and reproduce and defends the prey from predators. Prey and predators are not
-agents but only a logistic equation.
+and reproduce and defends the prey from predators. Prey follows a logistic growth,
+that is subtracted by predation which defense is able to reduce.
 
 Effort:
-Scavenger's can either all start with a fixed effort or a randomized starting 
-effort. Effort determines how much the agent either gathers waste or defends
-prey in a step.
+Scavengers can either all start with a fixed effort or a randomized starting 
+effort. Effort determines the fraction of their energy spent towards gathering
+while the remainder goes towards defense (1 - effort = defense).
+
+Genome:
+Each scavenger has two genes, one for effort (continuous number between 0 and 1)
+and one for having green-beard (0 no beard 1 has beard).
 
 Genetic operators:
-  - Selection: Agent selection for survival and breeding determined by how much
-    effort an agent allocated towards food gathering (more effort more food) 
-  - Crossover: Genetic information from each parent is combined into an offspring
-    by being average.
-  - Mutation: A distortion from the passed down genetics through a standard deviation
-    of Guassian noise.
+  - Selection: Agent selection is done through both survival and breeding. Surviving
+    occurs when a scavenger has at least one (rounded) food at the end of a step. 
+    Breeding occurs when a scavenger is deemed a parent by having two or more (rounded)
+    food by the end of the step. Each food beyond the two food allows for an extra slot
+    for offspring, all the parents are pooled together and paired within this pool.
+  - Crossover: Uses intermediate crossover, where information from each parent is
+    combined into an offspring by being average.
+  - Mutation: Mutation is done by adding Gaussian noise that is added to the offspring's 
+    effort and clipped to [0,1].
+
 
 Green-beard:
 A subpopulation of the scavengers that has the green-beard gene. In this population
-green-beards when gathering food share their food in a pool that is then equally split
-among the green-beard population.
+green-beards have a trait of sharing with each other. This means that once they have 
+gathered, a fraction of it is split into a communal pool that is equally shared across
+all green-beards. This genetic trait is inherited from a single parent and has the 
+probability to be flipped.
 '''
 import random
+
+GA_PARAMS = {
+  # Scavenger parameters
+  "scav_strt": 20,    # Starting population of scavengers
+  "scav_eff": 0.75,   # Effort amount for population when fixed
+  "mut_sd": 0.03,     # Gaussian noise added to offspring's effot
+  "rand_eff": True,   # Switch for randomizing effort at start, random is uniform in [0,1]
+  # Green-beard (only when gb_switch=True)
+  "gb_strt": 0.2,     # Fraction of starting population that has green-beard
+  "gb_flip": 0.01,    # Probability of flipping beard gene in both directions
+}
 
 class RandomAgent:
   def __str__(self):
