@@ -7,6 +7,7 @@ each other.
 '''
 
 import numpy as np
+import matplotlib.pyplot as plt
 from algorithms import GA_PARAMS, create_population, next_gen
 
 # Prey and predation parameters:
@@ -147,3 +148,25 @@ def run_env(params, seed, steps):
 
    return prey_h, pop_h, mean_h, {"beard": beard_h, "beff": beff_h, "neff": neff_h}
 
+def plot_populations(prey_h, pop_h):
+   """
+   Plot population for both prey and scavengers for a run.
+   """
+   fig, ax1 = plt.subplots()
+   ax1.plot(prey_h, color='blue', label='Prey population')
+   ax1.set_xlabel('Steps')
+   ax1.set_ylabel('Prey population')
+   ax1.set_ylim(bottom=0)
+
+   ax2 = ax1.twinx()
+   ax2.plot(pop_h, color='red', label='Scavenger population')
+   ax2.set_ylabel('Scavenger population')
+   ax2.set_ylim(bottom=0)
+
+   lines1, labels1 = ax1.get_legend_handles_labels()
+   lines2, labels2 = ax2.get_legend_handles_labels()
+   ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper right')
+
+   plt.title('Prey and Scavenger Population For Run.')
+   plt.show()
+   return fig
