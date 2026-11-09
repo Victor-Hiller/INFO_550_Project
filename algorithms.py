@@ -19,8 +19,8 @@ Genetic operators:
   - Selection: Agent selection is done through both survival and breeding. Surviving
     occurs when a scavenger has at least one (rounded) food at the end of a step. 
     Breeding occurs when a scavenger is deemed a parent by having two or more (rounded)
-    food by the end of the step. Each food beyond the two food allows for an extra slot
-    for offspring, all the parents are pooled together and paired within this pool.
+    food by the end of the step. Each food beyond the first food adds more to the number
+    offspring for the entire population.
   - Crossover: Uses intermediate crossover, where information from each parent is
     combined into an offspring by being average.
   - Mutation: Mutation is done by adding Gaussian noise that is added to the offspring's 
@@ -80,6 +80,41 @@ def create_population(params):
 
   genomes = np.column_stack([efforts, beards])
   return genomes
+
+def next_gen(genomes, food, params):
+  """
+  Produces the next generation of scavengers after a step, with survivors and
+  new offspring that comes from scavengers that have more than two food. The
+  new child's genome is done through intermediate crossover, containing the 
+  average of both parent's genes. This new child genome then has Gaussian noise
+  added and is clipped to [0,1]. End returns a concatenated array of both suvivors
+  and the new offspring to the genome population.
+  """
+  whole = np.round(food)
+
+  survivors = whole >= 1
+  offsprings = np.maximum(0, whole - 1).astype(int)
+
+  parent_ids = np.where(offsprings > 0)[0]
+  n_offspring = offsprings.sum()
+
+  if n_offspring > 0:
+    idx_a = np.random.choice(parent_ids, size=n_offspring)
+    idx_b = np.random.choice(parent_ids, size=n_offspring)
+    child_effort = (genomes[idx_a, 0] + genomes[idx_b, 0]) / 2
+    child_effort = child_effort + np.random.normal(0, params["mut_sd"], n_offspring)
+    child_effort = np.clip(child_effort, 0, 1)
+    child_gb = genomes[idx_a, 1]
+
+    if params["gb_switch"] and params["gb_flip"] > 0:
+      flips = np.random.random(n_offspring) < params["gb_flip"]
+      child_gb = np.where(flips, 1 - child_gb, child_gb)
+
+    children = np.column_stack([child_effort, child_gb])
+  else:
+    children = np.empty((0,2))
+
+  return np.concatenate([genomes[survivors], children])
 
 class RandomAgent:
   def __str__(self):
