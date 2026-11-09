@@ -10,7 +10,7 @@ import numpy as np
 
 # Prey and predation parameters:
 # prey_strt, base_pred, grd_str, grw_rate, carry_cap
-PARAMS = {
+ENV_PARAMS = {
     #Prey and predation:
     "prey_strt": 50,       # starting population of prey
     "base_pred": 15,       # number of prey eaten per step
@@ -23,15 +23,19 @@ PARAMS = {
    "gthr_max": 0.75,       # maximum effort threshold for gathering
    "top_food_min": 2,      # minimum amount of food for top demand
    "top_food_max": 5,      # maximum amount of food for top demand
-   # Population and genetics:
-   "scav_strt": 20,        # scavenger starting population
-   "scav_eff": 0.75,       # starting effort for scavengers when not randomized
-   "mut_sd": 0.03,         # mutation standard deviation (Gaussian noise)
    # Green beard:
-   "gb_switch": False,     # toggle for green-beard gene
-   "gb_strt": 0.2,         # fraction of starting population that are green-beard
    "gb_shr": 0.5,          # fraction of each beard's food put into share pool
-   "gb_flip": 0.01,        # probability that each offspring's beard flips (both directions)
 }
+
+def step_prey(prey, efforts, params):
+    total_def = np.sum(1 - efforts)
+    real_pred = max(0, params["base_pred"] - total_def * params["def_str"])
+    grw_prey = params["grw_rate"] * prey * (1 - prey / params["carry_cap"])
+    new_prey = prey + grw_prey - real_pred
+    return max(0, new_prey)
+
+
+
+
 
 
