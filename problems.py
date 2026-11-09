@@ -75,3 +75,22 @@ def scav_effort_to_food(prey, efforts, params):
       food_pool = food_pool - food[i]
 
    return food
+
+def share_food(food, genomes, params):
+   """
+   Only when green-beard population (bearders) is present, this function is used to 
+   distributedcfood amongst them. Portion of each bearder's food is taken equal to
+   gb_shr, this amount is added to a pool. This total pool is then shared among
+   all the bearders equally. Returns whole food pool after sharing.
+   """
+   bearders = genomes[:,1] > 0.5
+   n_bearders = np.sum(bearders)
+
+   if n_bearders == 0:
+      return food
+
+   new_food = food.copy()
+   given = params["gb_shr"] * new_food[bearders]
+   shr_pool = np.sum(given)
+   new_food[bearders] = new_food[bearders] - given + shr_pool / n_bearders
+   return new_food
