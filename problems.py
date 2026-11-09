@@ -7,6 +7,7 @@ each other.
 '''
 
 import numpy as np
+from algorithms import GA_PARAMS, create_population, next_gen
 
 # Prey and predation parameters:
 # prey_strt, base_pred, grd_str, grw_rate, carry_cap
@@ -94,3 +95,55 @@ def share_food(food, genomes, params):
    shr_pool = np.sum(given)
    new_food[bearders] = new_food[bearders] - given + shr_pool / n_bearders
    return new_food
+
+def run_env(params, seed, steps):
+   """
+   Runs the environment with a random seed and selected amount of steps, note params
+   must be dictionary {**ENV_PARAMS, **GA_PARAMS}. Start of function generates the 
+   scavenger population with either fixed or randomized effort (toggled with rand_eff).
+   After runs through steps in the following order:
+      - Prey population calculation
+      - Food pool distribution (sharing only if gb_switch=True)
+      - Next generation of scavengers
+      - Population statistics
+   
+   After each step statistics for that step are added to lists, three list and a 
+   dictionary are returned as the result. The following statistics are returned:
+      - prey_h: Population of prey
+      - pop_h: Population of scavengers
+      - mean_h: Mean effort of population
+      * Dictionary statisitics
+      - beard_h: Fraction of population that are green-beards
+      - beff_h: Mean effort of bearders
+      - neff_h: Mean effort of non-bearders
+   """
+   np.random.seed(seed)
+
+   genomes = create_population(params)
+
+   prey = params["prey_strt"]
+   prey_h, pop_h, mean_h, beard_h, beff_h, neff_h = [], [], [], [], [], []
+
+   for t in range(steps):
+      efforts = genomes[:,0]
+      prey = step_prey(prey, efforts, params)
+      food = scav_effort_to_food(prey, efforts, params)
+      if params["gb_switch"]:
+         food = share_food(food, genomes, params)
+
+      genomes = next_gen(genomes, food, params)
+
+      prey_h.append(prey)
+      pop_h.append(len(genomes))
+      mean_h.append(np.mean(genomes[:,0]) if len(genomes) > 0 else np.nan)
+
+      bearders = genomes[:,1] > 0.5
+      beard_h.append(np.mean(bearders) if len(genomes) > 0 else np.nan)
+      beff_h.append(np.mean(genomes[bearders, 0]) if bearders.any() else np.nan)
+      neff_h.append(np.mean(genomes[~bearders, 0]) if (~bearders).any() else np.nan)
+
+      if len(genomes) == 0:
+         break
+
+   return prey_h, pop_h, mean_h, {"beard": beard_h, "beff": beff_h, "neff": neff_h}
+
