@@ -24,7 +24,20 @@ SCENARIOS = [
     {"label": "Scene 3", "overrides": {"gb_strt": 0.8, "gb_shr": 1.0}, "seed": 16}
 ]
 
+# Steps taken within a run, global
 STEPS = 40
+
+def run_scenario(scenario):
+    """
+    Runs one of the scenarios through run_env() to produce a scavenger run. Expects
+    a scenario to have entries "overrides" and "seed" to run properly.
+    Returns results from the run and parameters used.
+    """
+    params = {**prb.ENV_PARAMS, **alg.GA_PARAMS}
+    params.update(scenario["overrides"])
+    prey_h, pop_h, mean_h, extra = prb.run_env(params, scenario["seed"], STEPS, record=True)
+    
+    return params, prey_h, pop_h, mean_h, extra
 
 
     
