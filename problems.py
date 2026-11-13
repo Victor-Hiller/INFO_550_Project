@@ -8,6 +8,7 @@ each other.
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 from algorithms import GA_PARAMS, create_population, next_gen
 
 # Prey and predation parameters:
@@ -180,3 +181,45 @@ def plot_populations(prey_h, pop_h):
    plt.show()
    return fig
 
+def animate_efforts(genomes, params, prey_h):
+   """
+   Generates a live display of histogram depicting effort of gathering for both
+   green beards and non-green breard populations. Shows the total population count
+   for both scavengers and prey population within the title. Also shows threshold
+   lines for gathering effort maximum and minimum.
+   """
+   fig, ax = plt.subplots()
+   bins = np.linspace(0, 1, 21)
+   ylim = max(len(g) for g in genomes)
+
+   def update(frame):
+      ax.clear()
+      ax.set_ylim(0, ylim)
+      ax.set_xlim(0, 1)
+      g = genomes[frame]
+      if len(g) == 0:
+         ax.text(0.5, 0.5, 'Population Extinct', transform=ax.transAxes, ha='center')
+         ax.set_title(f'Step {frame}: Population now extinct')
+         return
+      
+      beards = g[:,1] > 0.5
+      b_eff = g[beards, 0]
+      nb_eff = g[~beards, 0]
+
+      if frame > 0:
+         prey_text = f'prey population: {prey_h[frame - 1]:.1f}'
+      else:
+         prey_text = f'prey population: {params["prey_strt"]:.1f}'
+
+      ax.hist(b_eff, bins=bins, alpha=0.6, label='bearders effort')
+      ax.hist(nb_eff, bins=bins, alpha=0.6, label='non-bearder effort')
+      ax.axvline(params["gthr_min"], linestyle='--', label='Minimum effort for gathering')
+      ax.axvline(params["gthr_max"], linestyle='--', label='Maximum effort for gathering')
+      ax.legend()
+      ax.set_xlabel("Effort (fraction spent gathering)")
+      ax.set_ylabel("Scavenger count")
+      ax.set_title(f'Step {frame} | scavenger population: {len(g)}, {prey_text}')
+
+
+   animation = FuncAnimation(fig, update, frames=len(genomes), interval=400, repeat=False)
+   return animation 
